@@ -213,8 +213,8 @@ endif ()
 
 if (OPENMEDIA_VORBIS)
     if (AUI_BOOT)
-        auib_import(Vorbis https://github.com/xiph/vorbis
-                VERSION 2d79800b6751dddd4b8b4ad50832faa5ae2a00d9)
+        auib_import(Vorbis https://github.com/Nelonn/vorbis
+                VERSION 8de7001691d9177e30ff16a98b37b1e6fd15f7af)
     elseif (NOT TARGET Vorbis::vorbis)
         add_subdirectory(third_party/external/vorbis)
     endif ()
@@ -231,6 +231,15 @@ if (OPENMEDIA_WEBP)
         auib_import(WebP https://github.com/webmproject/libwebp VERSION v1.6.0 CMAKE_ARGS ${WEBP_CMAKE_ARGS})
         target_link_libraries(OpenMedia PRIVATE WebP::webpdemux WebP::webpdecoder)
     elseif (NOT TARGET WebP::webp)
+        set(WEBP_BUILD_ANIM_UTILS OFF)
+        set(WEBP_BUILD_CWEBP OFF)
+        set(WEBP_BUILD_DWEBP OFF)
+        set(WEBP_BUILD_GIF2WEBP OFF)
+        set(WEBP_BUILD_IMG2WEBP OFF)
+        set(WEBP_BUILD_VWEBP OFF)
+        set(WEBP_BUILD_WEBPINFO OFF)
+        set(WEBP_BUILD_WEBPMUX OFF)
+        set(WEBP_BUILD_EXTRAS OFF)
         add_subdirectory(third_party/external/libwebp)
         target_link_libraries(OpenMedia PRIVATE webpdemux webpdecoder)
     endif ()
@@ -241,7 +250,8 @@ endif ()
 if (OPENMEDIA_JPEG)
     auib_import(libjpeg-turbo
             https://github.com/libjpeg-turbo/libjpeg-turbo
-            VERSION 3.1.3)
+            VERSION 3.1.3
+            CMAKE_ARGS -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib)
     target_link_libraries(OpenMedia PRIVATE libjpeg-turbo::jpeg-static)
     target_sources(OpenMedia PRIVATE src/image/jpeg_demuxer.cpp)
     target_sources(OpenMedia PRIVATE src/image/jpeg_decoder.cpp)
@@ -266,8 +276,8 @@ endif ()
 
 if (OPENMEDIA_PNG)
     if (AUI_BOOT)
-        auib_import(png https://github.com/Nelonn/libpng
-                VERSION 6208f2063214c8551381ce6bef838a7cb4e29195)
+        auib_import(PNG https://github.com/Nelonn/libpng
+                VERSION dd47360484d97fd1e4925eddc8102f084f5c2ce9)
     elseif (NOT TARGET PNG::png)
         add_subdirectory(third_party/external/libpng)
     endif ()
@@ -279,7 +289,7 @@ endif ()
 if (OPENMEDIA_TIFF)
     if (AUI_BOOT)
         auib_import(TIFF https://github.com/libsdl-org/libtiff
-                VERSION 4ce82b57ce92f1cddcf6fb10d0dde103937170c4
+                VERSION f324415f50cb5c90f7712e9dfe69831f5d2ea88d
                 CMAKE_ARGS -Dtiff-tools=OFF -Dtiff-docs=OFF)
     elseif (NOT TARGET TIFF::tiff)
         set(tiff-tools OFF)
@@ -352,7 +362,7 @@ endif ()
 if (OPENMEDIA_EXAMPLE_PLAYER)
     if (AUI_BOOT)
         auib_import(SDL3 https://github.com/libsdl-org/SDL
-                VERSION be82f316c4745d4cf0f8c0a5e37f5390beed9542)
+                VERSION c20a058ff431d046c5806bd22aba0835b25d9904)
     elseif (NOT TARGET SDL3::SDL3)
         add_subdirectory(third_party/external/SDL)
     endif ()
