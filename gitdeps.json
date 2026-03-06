@@ -61,7 +61,7 @@
   },
   "third_party/external/vorbis": {
     "url": "https://github.com/Nelonn/vorbis",
-    "commit": "7d618707408992090f37a82fafbba65205ff2e05"
+    "commit": "9317964d4f863940b60ffcfb4e76120a6a6eefa2"
   },
   "third_party/external/Vulkan-Headers": {
     "url": "https://github.com/KhronosGroup/Vulkan-Headers",
