@@ -61,7 +61,7 @@ target_sources(OpenMedia PRIVATE
         src/format_detector.cpp
         src/format_registry.cpp
         src/formats.hpp
-        src/h264_annexb.hpp
+        src/annexb.hpp
         src/io.cpp
         src/log.cpp
         src/media.cpp
@@ -402,12 +402,12 @@ if (OPENMEDIA_INSTALL)
     )
 endif ()
 
-if (OPENMEDIA_EXAMPLE_PLAYER)
+if (OPENMEDIA_EXAMPLES)
     if (AUI_BOOT)
         auib_import(SDL3 https://github.com/libsdl-org/SDL
                 VERSION c20a058ff431d046c5806bd22aba0835b25d9904)
     elseif (NOT TARGET SDL3::SDL3)
         add_subdirectory(third_party/external/SDL)
     endif ()
-    add_subdirectory(omplayer)
+    add_subdirectory(example)
 endif ()
