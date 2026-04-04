@@ -38,20 +38,20 @@ integration while maintaining a simple, intuitive API.
 | Opus    |    ✅     |    ✅     | libopus                 |
 | Vorbis  |    ✅     |    🔧    | libvorbis               |
 | MP3     |    ✅     |    🔧    | minimp3                 |
-| OGG     |    ✅     |    🔧    | libogg                  |
 | WAV/PCM |    ✅     |    🔧    | OpenMedia               |
 
 ### Video Codecs
 
 **Status:** ✅ Implemented | 🔧 Planned
 
-| Codec   | Decoding | Encoding | Backends              |
-|---------|:--------:|:--------:|-----------------------|
-| AV1     |    ✅     |    🔧    | dav1d (decoding only) |
-| H264    |    ✅     |    🔧    | OpenH264, FFmpeg      |
-| VVC     |    🔧    |    🔧    | VVdeC, VVenC          |
-| EVC     |    🔧    |    🔧    | xevd, xeve            |
-| VP8/VP9 |    🔧    |    🔧    | libvpx                |
+| Codec     | Decoding | Encoding | Backends                      |
+|-----------|:--------:|:--------:|-------------------------------|
+| AV1       |    ✅     |    🔧    | dav1d (decoding only)         |
+| H264      |    ✅     |    🔧    | OpenH264, FFmpeg              |
+| H265/HEVC |    ✅     |    🔧    | FFmpeg                        |
+| H266/VVC  |    ✅     |    🔧    | FFmpeg, VVdeC (Broken), VVenC |
+| EVC       | Untested | Untested | FFmpeg, xevd, xeve            |
+| VP8/VP9   | Untested |    🔧    | FFmpeg, libvpx                |
 
 ### Image Codecs
 
@@ -95,17 +95,17 @@ OpenMedia provides interfaces for hardware-accelerated decoding and encoding:
 
 **Status:** ✅ Implemented | 🔧 Planned
 
-| Format                  | Status | Description                              |
-|-------------------------|:------:|------------------------------------------|
-| Matroska (MKV/MKA/WebM) |   ✅    | Full demuxer support via libwebm         |
-| MP4/MOV (BMFF)          |   ✅    | ISO Base Media File Format demuxer       |
-| Ogg                     |   ✅    | Ogg container demuxer                    |
-| WAV                     |   ✅    | WAV demuxer                              |
-| FLAC                    |   ✅    | Native FLAC demuxer                      |
-| MP3                     |   ✅    | MP3 demuxer                              |
-| AVI                     |   🔧   | Audio Video Interleave                   |
-| WebM                    |   ✅    | Google's web media format (via Matroska) |
-| MOV/QuickTime           |   🔧   | Apple QuickTime format                   |
+| Format                  | Demuxing | Muxing      | Description                         |
+|-------------------------|:--------:|-------------|-------------------------------------|
+| Matroska (MKV/MKA/WebM) |    ✅     | Untested    | Matroska container (libwebm)        |
+| WebM                    |    ✅     | Untested    | Google's web media format (libwebm) |
+| MP4/MOV (BMFF)          |    ✅     | 🔧          | ISO Base Media File Format          |
+| MOV/QuickTime           |    🔧    | 🔧          | Apple QuickTime format              |
+| Ogg                     |    ✅     | 🔧          | Ogg container                       |
+| WAV                     |    ✅     | 🔧          | WAV container                       |
+| FLAC                    |    ✅     | 🔧          | FLAC container                      |
+| MP3                     |    ✅     | 🔧          | MP3 container                       |
+| AVI                     |    🔧    | Not planned | Audio Video Interleave              |
 
 ---
 

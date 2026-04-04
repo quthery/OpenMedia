@@ -106,7 +106,7 @@ if (OPENMEDIA_PNG OR OPENMEDIA_MATROSKA)
 endif ()
 
 if (WIN32)
-    target_sources(OpenMedia PRIVATE src/audio/wmf.cpp)
+    target_sources(OpenMedia PRIVATE src/audio/wmf_audio.cpp)
     #target_sources(OpenMedia PRIVATE src/video/wmf.cpp) # doesn't work
 endif ()
 
@@ -115,11 +115,19 @@ if (OPENMEDIA_AMF)
 endif ()
 
 if (OPENMEDIA_DX11_VIDEO)
-    #target_sources(OpenMedia PRIVATE src/video/dx11.cpp)
+    target_sources(OpenMedia PRIVATE include/openmedia/hw_dx11.h)
+    target_sources(OpenMedia PRIVATE src/hw_dx11.cpp)
+    target_sources(OpenMedia PRIVATE src/video/dx11.cpp)
+    target_link_libraries(OpenMedia PRIVATE d3d11.lib dxgi.lib dxva2.lib mf.lib mfplat.lib mfuuid.lib mfreadwrite.lib)
+    target_compile_definitions(OpenMedia PRIVATE OPENMEDIA_DX11_VIDEO)
 endif ()
 
 if (OPENMEDIA_DX12_VIDEO)
-    #target_sources(OpenMedia PRIVATE src/video/dx12.cpp)
+    target_sources(OpenMedia PRIVATE include/openmedia/hw_dx12.h)
+    target_sources(OpenMedia PRIVATE src/hw_dx12.cpp)
+    target_sources(OpenMedia PRIVATE src/video/dx12.cpp)
+    target_link_libraries(OpenMedia PRIVATE d3d12.lib dxgi.lib dxva2.lib mf.lib mfplat.lib mfuuid.lib mfreadwrite.lib)
+    target_compile_definitions(OpenMedia PRIVATE OPENMEDIA_DX12_VIDEO)
 endif ()
 
 if (OPENMEDIA_FFMPEG)
@@ -371,16 +379,29 @@ if (OPENMEDIA_VVDEC)
 endif ()
 
 if (OPENMEDIA_XEVD)
-    #if (AUI_BOOT)
-    #    auib_import(xevd https://github.com/mpeg5/xevd
-    #            VERSION 4087f635624cf4ee6ebe3f9ea165ff939b32117f)
-    #elseif (NOT TARGET dav1d::dav1d)
-    #    add_subdirectory(third_party/external/xevd)
-    #endif ()
-    add_subdirectory(third_party/external/xevd)
-    target_link_libraries(OpenMedia PRIVATE xevd)
+    if (AUI_BOOT)
+        auib_import(xevd https://github.com/Nelonn/xevd
+                VERSION d3ef577f51e489260a94bc0abd330674d62f7885
+                CMAKE_ARGS -DXEVD_INSTALL=ON)
+    elseif (NOT TARGET XEVD::xevd)
+        add_subdirectory(third_party/external/xevd)
+    endif ()
+    target_link_libraries(OpenMedia PRIVATE XEVD::xevd)
     target_sources(OpenMedia PRIVATE src/video/xevd.cpp)
     target_compile_definitions(OpenMedia PRIVATE OPENMEDIA_XEVD)
+endif ()
+
+if (OPENMEDIA_XEVE)
+    if (AUI_BOOT)
+        auib_import(xeve https://github.com/Nelonn/xeve
+                VERSION 865dce7ea5104ab2770980713d74e7cc96bc98a8
+                CMAKE_ARGS -DXEVD_INSTALL=ON)
+    elseif (NOT TARGET XEVE::xeve)
+        add_subdirectory(third_party/external/xeve)
+    endif ()
+    target_link_libraries(OpenMedia PRIVATE XEVE::xeve)
+    target_sources(OpenMedia PRIVATE src/video/xeve.cpp)
+    target_compile_definitions(OpenMedia PRIVATE OPENMEDIA_XEVE)
 endif ()
 
 if (OPENMEDIA_INSTALL)

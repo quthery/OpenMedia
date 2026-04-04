@@ -281,7 +281,7 @@ private:
           av_frame->width, av_frame->height, 1);
 
       if (buffer_size > 0) {
-        int num_planes = Picture::getNumPlanes(picture.format);
+        int num_planes = getNumPlanes(picture.format);
         for (int i = 0; i < num_planes && i < 4; ++i) {
           if (av_frame->data[i] && picture.planes.getData(i)) {
             uint32_t plane_height = picture.getPlaneDimensions(i).second;
@@ -401,16 +401,36 @@ const CodecDescriptor CODEC_FFMPEG_H266 = {
     .codec_id = OM_CODEC_H266,
     .type = OM_MEDIA_VIDEO,
     .name = "ffmpeg_h266",
-    .long_name = "HEVC (High Efficiency Video Coding) (FFmpeg)",
+    .long_name = "VVC (Versatile Video Coding) (FFmpeg)",
     .vendor = "FFmpeg",
     .flags = CodecFlags::NONE,
     .decoder_factory = [] { return std::make_unique<FFmpegDecoder>(OM_CODEC_H266); },
 };
 
+const CodecDescriptor CODEC_FFMPEG_EVC = {
+    .codec_id = OM_CODEC_EVC,
+    .type = OM_MEDIA_VIDEO,
+    .name = "ffmpeg_evc",
+    .long_name = "EVC (Essential Video Coding) (FFmpeg)",
+    .vendor = "FFmpeg",
+    .flags = CodecFlags::NONE,
+    .decoder_factory = [] { return std::make_unique<FFmpegDecoder>(OM_CODEC_EVC); },
+};
+
+const CodecDescriptor CODEC_FFMPEG_VP8 = {
+    .codec_id = OM_CODEC_VP8,
+    .type = OM_MEDIA_VIDEO,
+    .name = "ffmpeg_vp8",
+    .long_name = "Google VP8 (FFmpeg)",
+    .vendor = "FFmpeg",
+    .flags = CodecFlags::NONE,
+    .decoder_factory = [] { return std::make_unique<FFmpegDecoder>(OM_CODEC_VP8); },
+};
+
 const CodecDescriptor CODEC_FFMPEG_VP9 = {
     .codec_id = OM_CODEC_VP9,
     .type = OM_MEDIA_VIDEO,
-    .name = "vp9",
+    .name = "ffmpeg_vp9",
     .long_name = "Google VP9 (FFmpeg)",
     .vendor = "FFmpeg",
     .flags = CodecFlags::NONE,
@@ -420,7 +440,7 @@ const CodecDescriptor CODEC_FFMPEG_VP9 = {
 const CodecDescriptor CODEC_FFMPEG_AV1 = {
     .codec_id = OM_CODEC_AV1,
     .type = OM_MEDIA_VIDEO,
-    .name = "av1",
+    .name = "ffmpeg_av1",
     .long_name = "Alliance for Open Media AV1 (FFmpeg)",
     .vendor = "FFmpeg",
     .flags = CodecFlags::NONE,
@@ -430,7 +450,7 @@ const CodecDescriptor CODEC_FFMPEG_AV1 = {
 const CodecDescriptor CODEC_FFMPEG_AAC = {
     .codec_id = OM_CODEC_AAC,
     .type = OM_MEDIA_AUDIO,
-    .name = "aac",
+    .name = "ffmpeg_aac",
     .long_name = "AAC (Advanced Audio Coding) (FFmpeg)",
     .vendor = "FFmpeg",
     .flags = CodecFlags::NONE,
@@ -440,7 +460,7 @@ const CodecDescriptor CODEC_FFMPEG_AAC = {
 const CodecDescriptor CODEC_FFMPEG_MP3 = {
     .codec_id = OM_CODEC_MP3,
     .type = OM_MEDIA_AUDIO,
-    .name = "mp3",
+    .name = "ffmpeg_mp3",
     .long_name = "MP3 (MPEG audio layer 3) (FFmpeg)",
     .vendor = "FFmpeg",
     .flags = CodecFlags::NONE,
@@ -450,7 +470,7 @@ const CodecDescriptor CODEC_FFMPEG_MP3 = {
 const CodecDescriptor CODEC_FFMPEG_OPUS = {
     .codec_id = OM_CODEC_OPUS,
     .type = OM_MEDIA_AUDIO,
-    .name = "opus",
+    .name = "ffmpeg_opus",
     .long_name = "Opus (FFmpeg)",
     .vendor = "FFmpeg",
     .flags = CodecFlags::NONE,
@@ -460,7 +480,7 @@ const CodecDescriptor CODEC_FFMPEG_OPUS = {
 const CodecDescriptor CODEC_FFMPEG_VORBIS = {
     .codec_id = OM_CODEC_VORBIS,
     .type = OM_MEDIA_AUDIO,
-    .name = "vorbis",
+    .name = "ffmpeg_vorbis",
     .long_name = "Vorbis (FFmpeg)",
     .vendor = "FFmpeg",
     .flags = CodecFlags::NONE,
@@ -470,7 +490,7 @@ const CodecDescriptor CODEC_FFMPEG_VORBIS = {
 const CodecDescriptor CODEC_FFMPEG_FLAC = {
     .codec_id = OM_CODEC_FLAC,
     .type = OM_MEDIA_AUDIO,
-    .name = "flac",
+    .name = "ffmpeg_flac",
     .long_name = "FLAC (Free Lossless Audio Codec) (FFmpeg)",
     .vendor = "FFmpeg",
     .flags = CodecFlags::NONE,

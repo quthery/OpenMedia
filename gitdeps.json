@@ -70,6 +70,7 @@
   "third_party/external/vvdec": {
     "url": "https://github.com/fraunhoferhhi/vvdec",
     "commit": "7df9d1f978433092d06537b3fe2f92a7fc33adcc",
+    "patches": ["third_party/vvdec.patch"],
     "option": ["vvdec", "vvc_dec", "vvc_all"]
   },
   "third_party/external/vvenc": {
@@ -78,14 +79,14 @@
     "option": ["vvenc", "vvc_enc", "vvc_all"]
   },
   "third_party/external/xevd": {
-    "url": "https://github.com/mpeg5/xevd",
-    "commit": "4087f635624cf4ee6ebe3f9ea165ff939b32117f",
+    "url": "https://github.com/Nelonn/xevd",
+    "commit": "d3ef577f51e489260a94bc0abd330674d62f7885",
     "option": ["xevd", "evc_dec", "evc_all"]
   },
   "third_party/external/xeve": {
-    "url": "https://github.com/mpeg5/xeve",
-    "commit": "429c18a7736ffc010e1c550e8015ff18a242d06c",
-    "option": ["xeve", "evc_env", "evc_all"]
+    "url": "https://github.com/Nelonn/xeve",
+    "commit": "865dce7ea5104ab2770980713d74e7cc96bc98a8",
+    "option": ["xeve", "evc_enc", "evc_all"]
   },
   "third_party/external/zlib-ng": {
     "url": "https://github.com/Nelonn/zlib-ng",

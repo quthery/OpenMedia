@@ -8,7 +8,7 @@
 #include <wrl/client.h>
 #include <comdef.h>
 #include <vector>
-#include <iostream>
+#include <format>
 
 #pragma comment(lib, "mfplat.lib")
 #pragma comment(lib, "mfuuid.lib")
@@ -32,19 +32,20 @@ static auto codecIdToMFCodec(OMCodecId codec) -> GUID {
   }
 }
 
-class WMFDecoder final : public Decoder {
+class WMFAudioDecoder final : public Decoder {
   ComPtr<IMFTransform> decoder_;
+  LoggerRef logger_;
   AudioFormat output_format_ = {};
-  uint32_t timescale_ = 0;
+  int64_t timescale_ = 0;
   bool initialized_ = false;
 
 public:
-  WMFDecoder() {
+  WMFAudioDecoder() {
     CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     MFStartup(MF_VERSION);
   }
 
-  ~WMFDecoder() override {
+  ~WMFAudioDecoder() override {
     if (decoder_) {
       decoder_.Reset();
     }
@@ -79,6 +80,8 @@ public:
   }
 
   auto configure(const DecoderOptions& options) -> OMError override {
+    logger_ = options.logger ? options.logger : Logger::refDefault();
+
     GUID codec = codecIdToMFCodec(options.format.codec_id);
     if (codec == MFAudioFormat_Base) {
       return OM_CODEC_NOT_FOUND;
@@ -87,7 +90,7 @@ public:
     HRESULT hr = FindDecoder(&decoder_, codec);
     if (FAILED(hr)) {
       _com_error err(hr);
-      std::cerr << "Failed to find decoder: " << err.ErrorMessage() << std::endl;
+      logger_->log(OM_CATEGORY_DECODER, OM_LEVEL_ERROR, std::format("Failed to find decoder: {}", err.ErrorMessage()));
       return OM_CODEC_OPEN_FAILED;
     }
 
@@ -97,7 +100,7 @@ public:
     input_type->SetGUID(MF_MT_SUBTYPE, codec);
     input_type->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, options.format.audio.channels);
     input_type->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, options.format.audio.sample_rate);
-    input_type->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+    input_type->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, options.format.audio.bit_depth);
     input_type->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, 1);
 
     if (options.format.codec_id == OM_CODEC_AAC) {
@@ -130,16 +133,16 @@ public:
       }
     }
 
-    timescale_ = 10000000;
+    timescale_ = 10000000LL * options.time_base.num / options.time_base.den;
 
     hr = decoder_->SetInputType(0, input_type.Get(), 0);
     if (FAILED(hr)) {
       _com_error err(hr);
-      std::cerr << "SetInputType failed: " << err.ErrorMessage() << std::endl;
+      logger_->log(OM_CATEGORY_DECODER, OM_LEVEL_ERROR, std::format("SetInputType failed: {}", err.ErrorMessage()));
       return OM_CODEC_OPEN_FAILED;
     }
 
-    if (!setup_output_type()) {
+    if (!setupOutputType()) {
       return OM_CODEC_OPEN_FAILED;
     }
 
@@ -173,10 +176,17 @@ public:
       buffer->SetCurrentLength(static_cast<DWORD>(packet.bytes.size()));
 
       sample->AddBuffer(buffer.Get());
-      sample->SetSampleTime(packet.pts * 10000000LL / (timescale_ ? timescale_ : output_format_.sample_rate));
+
+      LONGLONG hns_sample_time = packet.pts * timescale_;
+      LONGLONG hns_sample_duration = packet.duration * timescale_;
+
+      sample->SetSampleTime(hns_sample_time);
+      sample->SetSampleDuration(hns_sample_duration);
 
       HRESULT hr = decoder_->ProcessInput(0, sample.Get(), 0);
       if (FAILED(hr)) {
+        _com_error err(hr);
+        logger_->log(OM_CATEGORY_DECODER, OM_LEVEL_ERROR, std::format("ProcessInput failed: {}", err.ErrorMessage()));
         return Err(OM_CODEC_DECODE_FAILED);
       }
     }
@@ -184,10 +194,14 @@ public:
     while (true) {
       MFT_OUTPUT_STREAM_INFO info;
       HRESULT hr = decoder_->GetOutputStreamInfo(0, &info);
-      if (FAILED(hr)) break;
+      if (FAILED(hr)) {
+        _com_error err(hr);
+        logger_->log(OM_CATEGORY_DECODER, OM_LEVEL_ERROR, std::format("GetOutputStreamInfo failed: {}", err.ErrorMessage()));
+        break;
+      }
 
-      MFT_OUTPUT_DATA_BUFFER output = { 0 };
-      output.dwStreamID = 0;
+      MFT_OUTPUT_DATA_BUFFER output_buffer = {};
+      output_buffer.dwStreamID = 0;
 
       ComPtr<IMFSample> out_sample;
       bool we_provided_sample = false;
@@ -196,23 +210,31 @@ public:
         ComPtr<IMFMediaBuffer> out_buffer;
         MFCreateMemoryBuffer(info.cbSize, &out_buffer);
         out_sample->AddBuffer(out_buffer.Get());
-        output.pSample = out_sample.Get();
+        output_buffer.pSample = out_sample.Get();
         we_provided_sample = true;
       }
 
       DWORD status = 0;
-      hr = decoder_->ProcessOutput(0, 1, &output, &status);
+      hr = decoder_->ProcessOutput(0, 1, &output_buffer, &status);
 
-      if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) break;
+      if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+        _com_error err(hr);
+        logger_->log(OM_CATEGORY_DECODER, OM_LEVEL_VERBOSE, std::format("ProcessOutput warned: {}", err.ErrorMessage()));
+        break;
+      }
       if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
-        setup_output_type();
+        setupOutputType();
         continue;
       }
-      if (FAILED(hr)) break;
+      if (FAILED(hr)) {
+        _com_error err(hr);
+        logger_->log(OM_CATEGORY_DECODER, OM_LEVEL_ERROR, std::format("ProcessOutput failed: {}", err.ErrorMessage()));
+        break;
+      }
 
-      if (output.pSample) {
+      if (output_buffer.pSample) {
         ComPtr<IMFMediaBuffer> media_buffer;
-        output.pSample->GetBufferByIndex(0, &media_buffer);
+        output_buffer.pSample->GetBufferByIndex(0, &media_buffer);
 
         BYTE* data = nullptr;
         DWORD current_len = 0;
@@ -224,24 +246,26 @@ public:
 
         LONGLONG sample_time = 0;
         int64_t pts = 0;
-        if (SUCCEEDED(output.pSample->GetSampleTime(&sample_time))) {
+        if (SUCCEEDED(output_buffer.pSample->GetSampleTime(&sample_time))) {
           pts = sample_time * output_format_.sample_rate / 10000000;
         }
 
-        std::memcpy(samples_fmt.planes.data[0], data, current_len);
+        memcpy(samples_fmt.planes.data[0], data, current_len);
         media_buffer->Unlock();
 
-        Frame frame;
+        Frame frame = {};
         frame.pts = pts;
         frame.data = std::move(samples_fmt);
         frames.push_back(std::move(frame));
 
         if (!we_provided_sample) {
-          output.pSample->Release();
+          output_buffer.pSample->Release();
         }
       }
 
-      if (output.pEvents) output.pEvents->Release();
+      if (output_buffer.pEvents) {
+        output_buffer.pEvents->Release();
+      }
     }
 
     return Ok(std::move(frames));
@@ -254,7 +278,7 @@ public:
   }
 
 private:
-  bool setup_output_type() {
+  auto setupOutputType() -> bool {
     ComPtr<IMFMediaType> output_type;
     HRESULT hr;
 
@@ -287,18 +311,28 @@ private:
   }
 };
 
-auto create_wmf_decoder() -> std::unique_ptr<Decoder> {
-  return std::make_unique<WMFDecoder>();
+auto create_wmf_audio_decoder() -> std::unique_ptr<Decoder> {
+  return std::make_unique<WMFAudioDecoder>();
 }
 
-const CodecDescriptor CODEC_WMF = {
+const CodecDescriptor CODEC_WMF_AAC = {
   .codec_id = OM_CODEC_AAC,
   .type = OM_MEDIA_AUDIO,
   .name = "wmf_aac",
-  .long_name = "Windows Media Foundation audio decoder",
+  .long_name = "AAC (Windows Media Foundation)",
   .vendor = "Microsoft",
   .flags = NONE,
-  .decoder_factory = create_wmf_decoder,
+  .decoder_factory = create_wmf_audio_decoder,
+};
+
+const CodecDescriptor CODEC_WMF_MP3 = {
+  .codec_id = OM_CODEC_MP3,
+  .type = OM_MEDIA_AUDIO,
+  .name = "wmf_mp3",
+  .long_name = "MP3 (Windows Media Foundation)",
+  .vendor = "Microsoft",
+  .flags = NONE,
+  .decoder_factory = create_wmf_audio_decoder,
 };
 
 } // namespace openmedia
