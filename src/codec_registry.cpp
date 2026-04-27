@@ -103,7 +103,11 @@ void registerBuiltInCodecs(CodecRegistry* registry) noexcept {
   registry->registerCodec(&CODEC_PCM_S16LE);
   registry->registerCodec(&CODEC_PCM_F32LE);
 #if defined(__APPLE__)
+#if defined(OPENMEDIA_AVCODEC)
+  registry->registerCodec(&CODEC_FFMPEG_ALAC);
+#else
   registry->registerCodec(&CODEC_AUDIO_TOOLBOX_ALAC);
+#endif
 #else
   registry->registerCodec(&CODEC_ALAC);
 #endif
@@ -152,6 +156,7 @@ void registerBuiltInCodecs(CodecRegistry* registry) noexcept {
 #endif
 
 #if defined(OPENMEDIA_AVCODEC)
+  registry->registerCodec(&CODEC_FFMPEG_ALAC);
   registry->registerCodec(&CODEC_FFMPEG_H264);
   registry->registerCodec(&CODEC_FFMPEG_H265);
   registry->registerCodec(&CODEC_FFMPEG_H266);
