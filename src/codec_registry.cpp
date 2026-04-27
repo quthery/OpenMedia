@@ -156,7 +156,9 @@ void registerBuiltInCodecs(CodecRegistry* registry) noexcept {
 #endif
 
 #if defined(OPENMEDIA_AVCODEC)
+#if !defined(__APPLE__)
   registry->registerCodec(&CODEC_FFMPEG_ALAC);
+#endif
   registry->registerCodec(&CODEC_FFMPEG_H264);
   registry->registerCodec(&CODEC_FFMPEG_H265);
   registry->registerCodec(&CODEC_FFMPEG_H266);
