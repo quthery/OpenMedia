@@ -7,6 +7,7 @@
 #include <cstring>
 #include <format>
 #include <openmedia/audio.hpp>
+#include <openmedia/log.hpp>
 #include <span>
 #include <vector>
 
@@ -94,11 +95,8 @@ auto buildMagicCookie(OMCodecId codec_id, std::span<const uint8_t> extradata) ->
 
 struct DecodeContext {
   const Packet* packet = nullptr;
-<<<<<<< main
   uint32_t channels = 0;
   uint32_t frames_per_packet = 0;
-=======
->>>>>>> main
   AudioStreamPacketDescription packet_description = {};
   bool consumed = false;
 };
@@ -125,20 +123,12 @@ auto decodeCallback(AudioConverterRef,
   }
 
   io_data->mNumberBuffers = 1;
-<<<<<<< main
   io_data->mBuffers[0].mNumberChannels = context->channels;
-=======
-  io_data->mBuffers[0].mNumberChannels = 0;
->>>>>>> main
   io_data->mBuffers[0].mDataByteSize = static_cast<UInt32>(context->packet->bytes.size());
   io_data->mBuffers[0].mData = const_cast<uint8_t*>(context->packet->bytes.data());
 
   context->packet_description.mStartOffset = 0;
-<<<<<<< main
   context->packet_description.mVariableFramesInPacket = context->frames_per_packet;
-=======
-  context->packet_description.mVariableFramesInPacket = 0;
->>>>>>> main
   context->packet_description.mDataByteSize = static_cast<UInt32>(context->packet->bytes.size());
   if (out_data_packet_description) {
     *out_data_packet_description = &context->packet_description;
@@ -161,7 +151,6 @@ public:
   auto configure(const DecoderOptions& options) -> OMError override {
     closeConverter();
 
-    logger_ = options.logger ? options.logger : Logger::refDefault();
     if (options.format.type != OM_MEDIA_AUDIO || options.format.codec_id != codec_id_) {
       return OM_CODEC_INVALID_PARAMS;
     }
@@ -266,15 +255,12 @@ public:
     UInt32 packet_count = output_frame_capacity_;
     DecodeContext context;
     context.packet = &packet;
-<<<<<<< main
     context.channels = input_format_.mChannelsPerFrame;
     if (packet.duration > 0) {
       context.frames_per_packet = static_cast<uint32_t>(packet.duration);
     } else if (input_format_.mFramesPerPacket > 0) {
       context.frames_per_packet = input_format_.mFramesPerPacket;
     }
-=======
->>>>>>> main
 
     OSStatus status = AudioConverterFillComplexBuffer(converter_,
                                                       decodeCallback,
@@ -370,17 +356,15 @@ private:
   }
 
   void logStatus(OMLogLevel level, std::string_view operation, OSStatus status) const {
-    if (!logger_) {
-      return;
-    }
-    logger_->log(OM_CATEGORY_DECODER,
-                 level,
-                 std::format("AudioToolbox {} failed: {}", operation, static_cast<int32_t>(status)));
+    log(OM_CATEGORY_DECODER,
+        level,
+        "AudioToolbox {} failed: {}",
+        operation,
+        static_cast<int32_t>(status));
   }
 
   OMCodecId codec_id_ = OM_CODEC_NONE;
   AudioConverterRef converter_ = nullptr;
-  LoggerRef logger_ = {};
   AudioStreamBasicDescription input_format_ = {};
   AudioStreamBasicDescription output_stream_description_ = {};
   AudioFormat output_format_ = {};
